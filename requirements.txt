@@ -1,0 +1,7 @@
+nose
+flask
+sphinx
+flake8
+docopt
+behave
+requests
