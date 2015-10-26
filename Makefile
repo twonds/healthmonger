@@ -10,6 +10,8 @@ test: check
 venv: $(VENV)/installed
 
 $(VENV)/installed:
+	mkdir -p $(APP_DIR)/data
+	mkdir -p $(APP_DIR)/index
 	type -p virtualenv || sudo pip install virtualenv
 	test -d $(VENV) || virtualenv $(VENV)
 	$(VENV)/bin/python $(VENV)/bin/pip install -r requirements.txt
@@ -30,6 +32,12 @@ clean-emacs:
 clean-logs:
 	$(RM) $(APP_DIR)/logs/*.log
 
+clean-data:
+	$(RM) -rf $(APP_DIR)/data/*
+
+clean-index:
+	$(RM) -rf $(APP_DIR)/index/*
+
 clean: clean-venv clean-pyc clean-emacs clean-logs clean-reports
 
 flake-check:
@@ -46,6 +54,7 @@ start: venv
 stop:
 	ps -ef | awk "/python/ && !/grep/ && /healthmonger.py/ {print "'$$2'"}" | xargs kill -KILL || echo 'nothing to kill'
 
+
 TAGS ?= -skip
 
 STEPS := $(wildcard integration/features/steps/*.py)
@@ -57,10 +66,12 @@ ALL_TGTS += $(FEATURE_REPORTS)
 $(FEATURE_REPORTS) : integration/reports/%.feature.report : integration/features/%.feature $(STEPS)
 	mkdir -p $(dir $@)
 	$(RM) -f $@
-	$(VENV)/bin/behave $(VERBOSE:%=--verbose) $(TAGS:%=--tags=%)
+	$(VENV)/bin/behave $(VERBOSE:%=--verbose) $(TAGS:%=--tags=%) $<
 
 .PHONY: clean-reports
 clean-reports:
 	$(RM) $(FEATURE_REPORTS)
 
-check: check-unit
+check-integration: clean-reports $(FEATURE_REPORTS)
+
+check: clean check-unit start check-integration stop
