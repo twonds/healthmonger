@@ -34,3 +34,11 @@ class Memory(unittest.TestCase):
         m.update_store(table, store, 1234)
         self.assertEqual(m.data[table], store)
         self.assertNotEqual(old_store, m.data[table])
+
+    def test_fetch(self):
+        value = {'id': 1, 'wat': 'wat'}
+        m = memory.Store()
+        m.insert('test', 'id', 1, value)
+        result = m.fetch('test', 'id', 1)
+        for key, value in value.iteritems():
+            self.assertEqual(value, result.get(key))

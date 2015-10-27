@@ -24,9 +24,12 @@ DATA_SOURCES = {
 }
 
 TABLE_SCHEMA = {
-    'age_and_gender': fields.Schema(age_group=fields.TEXT,
-                                    service=fields.TEXT,
-                                    gender=fields.TEXT,
-                                    category=fields.TEXT,
-                                    payer=fields.TEXT)
+    'age_and_gender': fields.Schema(
+        id=fields.ID(stored=True),
+        age_group=fields.KEYWORD,
+        service=fields.KEYWORD,
+        gender=fields.KEYWORD,
+        category=fields.KEYWORD,
+        payer=fields.KEYWORD,
+        timestamp=fields.ID)
 }

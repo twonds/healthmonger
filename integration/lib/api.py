@@ -19,8 +19,7 @@ class Api:
         result = None
         query = "("
         if attribute:
-            key,value = attribute.split(':', 2)
-            query = query + key +"="+value
+            query = query + attribute
         query = query + ")"
         params = {'q': query,
                   'table':table}

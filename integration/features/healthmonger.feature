@@ -12,7 +12,7 @@ Scenario: load-data
 
 Scenario: query-age-gender-health-expenditures
   Given a client
-  When the client queries "age_and_gender" for "age:total" returning all "years"
+  When the client queries "age_and_gender" for "age_group:total" returning all "years"
   Then from "age_and_gender" the "total" value is ">1"
 
 @skip

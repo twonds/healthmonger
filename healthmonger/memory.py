@@ -12,12 +12,12 @@ class Store:
     def __init__(self):
         self.data_loaded = False
         self.time_loaded = None
-        self.data = {}
+        self.data = defaultdict(dict)
         for table, schema in config.TABLE_SCHEMA.iteritems():
             self.data[table] = self.new_store()
 
     def new_store(self):
-        return defaultdict(set)
+        return defaultdict(None)
 
     def update_store(self, table, store, timestamp):
         self.data[table] = store
@@ -28,3 +28,11 @@ class Store:
         """This connects to nothing since this is in memory.
         Used to do some initialization.
         """
+
+    def insert(self, table_name, key, value, obj):
+        i = unicode(key)+u':'+unicode(value)
+        self.data[table_name][i] = obj
+
+    def fetch(self, table_name, key, value):
+        i = unicode(key)+u':'+unicode(value)
+        return self.data[table_name][i]
