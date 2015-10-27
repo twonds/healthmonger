@@ -17,7 +17,7 @@ class Store:
             self.data[table] = self.new_store()
 
     def new_store(self):
-        return defaultdict(None)
+        return defaultdict(set)
 
     def update_store(self, table, store, timestamp):
         self.data[table] = store

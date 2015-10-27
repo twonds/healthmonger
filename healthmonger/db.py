@@ -1,5 +1,6 @@
 import itertools
 import md5
+import os
 import time
 
 from whoosh import index, qparser
@@ -17,6 +18,10 @@ def result_tuple(results, offset, limit):
     return len(results), limit_results
 
 
+class InvalidTable(Exception):
+    pass
+
+
 class Client:
     """
     """
@@ -29,47 +34,66 @@ class Client:
         # Index is used despite the backend we use
         self.index = {}
         for table, schema in config.TABLE_SCHEMA.iteritems():
+            path = config.INDEX_PATH+"/"+table
+            if not os.path.exists(path):
+                os.makedirs(path)
             # Whoosh used to have a ram index :(
             self.index[table] = index.create_in(config.INDEX_PATH, schema)
 
     def connect(self):
-        """
+        """Connect to the backend storage.
         """
         return self.store.connect()
 
-    def search(self, table, q, limit=10, offset=0):
-        """
+    def search(self, table, q, limit=10, offset=0, **kwargs):
+        """Search the database given a query string.
         """
         schema = config.TABLE_SCHEMA.get(table)
+        # XXX - need a default field to search against
         pq = qparser.QueryParser('category', schema)
         query = pq.parse(q)
-        log.debug(query)
-        total, results = self.execute(table, query, limit, offset)
+        try:
+            total, results = self.execute(table, query,
+                                          limit, offset, **kwargs)
+        except KeyError:
+            raise InvalidTable(table)
         return total, results
 
-    def search_index(self, table, term):
-        """
+    def search_index(self, table, term, limit=25, offset=0):
+        """Search the index returning the hit results with references
+        the data in storage.
         """
         results = []
         with self.index[table].searcher() as searcher:
-            search_hit = searcher.search(term, limit=None)
+            search_hit = searcher.search_page(term, offset+1, limit)
             for result in search_hit:
-                # We only need the fields, to reference the db
+                # We only need the fields to query the db
                 results.append(result.fields())
         return results
 
-    def execute(self, table, query, limit=25, offset=0):
-        """
+    def execute(self, table, query, limit=25, offset=0, **kwargs):
+        """Execute a request by searching the index via a parsed query string.
+        Then retrieve the data from the datastore and filter based on table
+        and arguments given.
         """
         results = []
-        index_results = self.search_index(table, query)
+        index_results = self.search_index(table, query,
+                                          limit=limit,
+                                          offset=offset)
         for result in index_results:
             for key, value in result.iteritems():
                 results.append(self.store.fetch(table, key, value))
-        # Grab ids from storage
-        return result_tuple(results, offset, limit)
+        f = getattr(self, "_filter_"+table, None)
+        if f is not None:
+            result = f(table, results, offset, limit, **kwargs)
+        else:
+            result = result_tuple(results, offset, limit)
+
+        return result
 
     def load(self, table, table_data):
+        """Load data into the index and datastore.
+        """
         if table not in config.TABLE_SCHEMA:
             raise Exception('{0} does not exist'.format(table))
         f = getattr(self, '_handle_'+table)
@@ -77,6 +101,25 @@ class Client:
             f(table, table_data)
         else:
             raise Exception('{0} handler does not exist'.format(table))
+
+    def _filter_age_and_gender(self, table, results, offset, limit, **kwargs):
+        return_filter = kwargs.get('filter', 'years')
+        if return_filter is None:
+            return_filter = 'years'
+        return_filter = return_filter.split()
+        new_results = []
+        log.debug(kwargs)
+        log.debug(return_filter)
+        if return_filter != ['years']:
+            for result in results:
+                log.debug(result)
+                log.debug(return_filter)
+                for year in ['2002', '2004', '2006', '2008', '2010']:
+                    if year not in return_filter:
+                        del result[year]
+                new_results.append(result)
+            results = new_results
+        return result_tuple(results, offset, limit)
 
     def _age_and_gender_tuple(self, row, category, ts):
         row_id = None
@@ -114,12 +157,20 @@ class Client:
                                                                ts)
                 store[u'id:'+unicode(row_id)] = row
                 store[category].add(row_id)
+                # Store this both lower and raw
                 writer.add_document(id=unicode(row_id),
                                     age_group=unicode(row_tuple[0]),
                                     service=unicode(row_tuple[1]),
                                     gender=unicode(row_tuple[2]),
                                     category=unicode(category),
                                     payer=unicode(row_tuple[3]),
+                                    timestamp=unicode(ts))
+                writer.add_document(id=unicode(row_id),
+                                    age_group=unicode(row_tuple[0].lower()),
+                                    service=unicode(row_tuple[1].lower()),
+                                    gender=unicode(row_tuple[2].lower()),
+                                    category=unicode(category.lower()),
+                                    payer=unicode(row_tuple[3].lower()),
                                     timestamp=unicode(ts))
         self.store.update_store(table_name, store, ts)
         writer.commit()

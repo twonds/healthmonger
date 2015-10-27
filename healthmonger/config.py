@@ -16,7 +16,7 @@ INDEX_PATH = APP_PATH + "index/"
 
 DEFAULT_QUERY_LIMIT = 10
 
-API_VERSION = 1
+API_VERSION = '1.0'
 
 DATA_SOURCES = {
     # 'historical': ('xls', 'https://www.cms.gov/Research-Statistics-Data-and-Systems/Statistics-Trends-and-Reports/NationalHealthExpendData/Downloads/Tables.zip'), # noqa

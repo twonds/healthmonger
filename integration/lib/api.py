@@ -1,6 +1,10 @@
 import requests
 
 class Api:
+    """Simple class library for making requests to the API.
+    This should be replaced by the official api module to ensure testing of both and
+    not have divergent code.
+    """
     url = 'http://localhost:5000/'
 
     def load_data(self):
@@ -22,12 +26,11 @@ class Api:
             query = query + attribute
         query = query + ")"
         params = {'q': query,
-                  'table':table}
+                  'table':table,
+                  'filter': values}
         url = self.url+'query'
         r = requests.get(url, params)
-        print r.status_code
-        print r.json()
-        return result
+        return r.json()
 
 def create():
     return Api()

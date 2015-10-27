@@ -43,14 +43,24 @@ def status():
 
 @app.route('/query')
 def query():
+    data = {'version': config.API_VERSION}
     args = flask.request.args
     limit = args.get('limit', config.DEFAULT_QUERY_LIMIT)
     offset = args.get('offset', 0)
     q = args.get('q', '')
     table = args.get('table')
-    total, result = db_client.search(table, q, limit, offset)
-    log.debug(result)
-    return flask.jsonify(result)
+    filter_params = {'filter': args.get('filter')}
+    try:
+        total, result = db_client.search(table, q,
+                                         limit, offset,
+                                         **filter_params)
+        log.debug(result)
+        data['result_count'] = total
+        data['results'] = result
+    except db.InvalidTable:
+        data['error'] = 'Invalid table:'+str(table)
+
+    return flask.jsonify(data)
 
 
 def load_table_data():
