@@ -1,3 +1,6 @@
+"""
+This module provides search index and database access for L{healthmonger}.
+"""
 import itertools
 import md5
 import os
@@ -12,6 +15,22 @@ import log
 
 
 def result_tuple(results, offset, limit):
+    """
+    Limit a set of results be the given offset and limit.
+
+    @param results: The total list of results.
+    @type results: C{list}
+
+    @param offset: The offset used to return a subset of results
+    @type offset: C{int}
+
+    @param limit: The number of results expected.
+    @type limit: C{int}
+
+    @return: The total number of results along with results sliced
+             by offset and limit.
+    @rtype: C{tuple} of (C{int}, C{list})
+    """
     limit_results = []
     for val in itertools.islice(results, offset, offset+limit):
         limit_results.append(val)
@@ -19,14 +38,29 @@ def result_tuple(results, offset, limit):
 
 
 class InvalidTable(Exception):
+    """
+    An exception raised when accessing an unknow or invalid database table.
+    """
     pass
 
 
 class Client:
     """
+    API for accessing the search index and datastores.
+
+    Search index is a L{Whoosh} index
+
+    @note: Supported databases: L{healthmonger.memory}
     """
 
     def __init__(self, db_type='memory'):
+        """
+        Setup a client that contains a search index and client to a database.
+
+        @param db_type: The database type to use.
+        @type db_type: C{string}
+
+        """
         self.data_loaded = False
         # XXX - memory is only supported right now.
         if db_type == 'memory':
@@ -41,12 +75,31 @@ class Client:
             self.index[table] = index.create_in(config.INDEX_PATH, schema)
 
     def connect(self):
-        """Connect to the backend storage.
+        """
+        Connect to the backend storage.
         """
         return self.store.connect()
 
     def search(self, table, q, limit=10, offset=0, **kwargs):
-        """Search the database given a query string.
+        """
+        Search the index with the given query string and fetch found
+        results from the database.
+
+        @param table: Table name to search
+        @type table: C{string}
+
+        @param q: Query string for the index. Example: this OR that
+        @type  q: C{string}
+
+        @param limit: Limit the number of results returned by the search.
+        @type limit: C{int}
+
+        @param offset: Used to indicate the position to start returning
+                       data from.
+        @type offset: C{int}
+
+        @note: The rest of the key word arguments are passed along and used
+               if there is a filter handler defined for the table.
         """
         schema = config.TABLE_SCHEMA.get(table)
         # XXX - need a default field to search against
@@ -60,8 +113,22 @@ class Client:
         return total, results
 
     def search_index(self, table, term, limit=25, offset=0):
-        """Search the index returning the hit results with references
-        the data in storage.
+        """
+        Search the index returning the hit results with references
+        to data in storage.
+
+        @param table: The table name to search.
+        @type table: C{string}
+
+        @param term: Parsed query term used by the index searcher.
+        @type term: C{string}
+
+        @param limit: Limit the number of results returned by the search.
+        @type limit: C{int}
+
+        @param offset: Used to indicate the position to start returning data
+                       from.
+        @type offset: C{int}
         """
         results = []
         with self.index[table].searcher() as searcher:
@@ -72,9 +139,26 @@ class Client:
         return results
 
     def execute(self, table, query, limit=25, offset=0, **kwargs):
-        """Execute a request by searching the index via a parsed query string.
+        """
+        Execute a request by searching the index via a parsed query string.
         Then retrieve the data from the datastore and filter based on table
         and arguments given.
+
+        @param table: The table name to search.
+        @type table: C{string}
+
+        @param query: Query string for searching the database.
+        @type query: C{string}
+
+        @param limit: Limit the number of results returned by the search.
+        @type limit: C{int}
+
+        @param offset: Used to indicate the position to start returning
+                       data from.
+        @type offset: C{int}
+
+        @note: The rest of the key word arguments are passed along and used
+               if there is a filter handler defined for the table.
         """
         results = []
         index_results = self.search_index(table, query,
@@ -92,7 +176,15 @@ class Client:
         return result
 
     def load(self, table, table_data):
-        """Load data into the index and datastore.
+        """
+        Load data into the index and datastore.
+
+        @param table: Table name to load data into. A schema in the
+                      configuration matching the table MUST exist.
+        @type table: C{string}
+
+        @param table_data: Data to load into the table. The type of this data
+                           is specific to the data loader handlers.
         """
         if table not in config.TABLE_SCHEMA:
             raise Exception('{0} does not exist'.format(table))

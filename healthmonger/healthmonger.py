@@ -1,7 +1,11 @@
+"""
+L{healthmonger}'s main flask application providing the HTTP JSON API.
+"""
 import flask
 
 # healthmonger modules
 import config
+import disco
 import db
 import loader
 import log
@@ -15,14 +19,20 @@ db_client = db.Client()
 
 @app.route('/')
 def index():
-    data = ""
-    with app.open_resource(config.APP_PATH+"README.md") as readme:
-        data = readme.readlines()
-    return "".join(data)
+    """
+    Return a list of tables and their corresponding API examples.
+    """
+    response = ""
+    for table in config.TABLE_SCHEMA.keys():
+        response = response + disco.examples(table)
+    return response
 
 
 @app.route('/load')
 def load_data():
+    """
+    Load all table data into the search index.
+    """
     try:
         loader.download()
         load_table_data()
@@ -35,14 +45,35 @@ def load_data():
 
 @app.route('/status')
 def status():
+    """
+    Report if the status of the service is OK or NOT_OK. If the service is OK
+    then the API is available.
+    """
     response = "NOT_OK"
     if db_client.data_loaded:
         response = "OK"
     return flask.jsonify({'status': response})
 
 
+@app.route('/disco')
+def discovery():
+    """
+    Discover information about the tables on this API endpoint.
+    """
+    table = flask.request.args.get('table')
+    response = 'Invalid table:'+str(table)
+    status = 404
+    response = disco.examples(table)
+    if response:
+        status = 200
+    return flask.Response(response, status=status)
+
+
 @app.route('/query')
 def query():
+    """
+    Query healthcare data stored in L{healthmonger}
+    """
     data = {'version': config.API_VERSION}
     args = flask.request.args
     limit = args.get('limit', config.DEFAULT_QUERY_LIMIT)
@@ -75,7 +106,6 @@ if __name__ == '__main__':
     log.debug("Starting ...")
     db_client.connect()
     # Download data if we do not have it.
-    # Note: This could delay the start of the service.
     loader.download(exists=False)
     load_table_data()
     app.run()

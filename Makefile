@@ -55,6 +55,16 @@ stop:
 	ps -ef | awk "/python/ && !/grep/ && /healthmonger.py/ {print "'$$2'"}" | xargs kill -KILL || echo 'nothing to kill'
 
 
+status:
+	@echo ""
+	curl "http://localhost:5000/status"
+	@echo "\n"
+
+api-example:
+	@echo ""
+	curl "http://localhost:5000/"
+	@echo "\n"
+
 TAGS ?= -skip
 
 STEPS := $(wildcard integration/features/steps/*.py)

@@ -8,7 +8,8 @@ import config
 
 
 def download(exists=True):
-    """Download data sources. Uses config.DATA_SOURCES
+    """
+    Download data sources. Uses config.DATA_SOURCES
     """
     for table, source in config.DATA_SOURCES.iteritems():
         path = config.DOWNLOAD_PATH + table
@@ -30,7 +31,8 @@ def download(exists=True):
 
 
 def read():
-    """Read data downloaded from data sources.
+    """
+    Read data downloaded from data sources.
     """
     for table, source in config.DATA_SOURCES.iteritems():
         path = config.DOWNLOAD_PATH + table
