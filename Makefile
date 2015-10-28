@@ -89,5 +89,6 @@ check: clean check-unit start check-integration stop
 travis:
 	flake8 tests healthmonger
 	nosetests tests
+	mkdir -p logs
 	python healthmonger/healthmonger.py >> logs/healthmonger.log 2>> logs/errors.log &
 	behave integration/features/healthmonger.feature
