@@ -15,7 +15,7 @@ def step_impl(context):
                 break
         except:
             pass
-        time.sleep(0.5)
+        time.sleep(1.5)
 
 @when(u'the client makes a status request')
 def step_impl(context):
