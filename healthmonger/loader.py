@@ -10,6 +10,12 @@ import config
 def download(exists=True):
     """
     Download data sources. Uses config.DATA_SOURCES
+
+    @param exists: A boolean flag to indicate if the tool should download
+                   data already downloaded.
+                   True - always download and import new data
+                   False - only download and import if there is not any data
+    @type exists: C{boolean}
     """
     for table, source in config.DATA_SOURCES.iteritems():
         path = config.DOWNLOAD_PATH + table

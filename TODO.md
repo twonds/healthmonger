@@ -28,6 +28,11 @@ Make more configurable
 There are parts that are not as flexible as they should be.
 
 
+Add metrics
+-----------
+
+Measuring things is good
+
 Remove XXX
 ----------
 
