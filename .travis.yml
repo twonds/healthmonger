@@ -5,4 +5,4 @@ python:
 
 install: "pip install -r requirements.txt"
 
-script: flake8 tests healthmonger; nosetests tests; make start; behave integration/features/healthmonger.feature
+script: flake8 tests healthmonger; nosetests tests;python healthmonger/healthmonger.py >> logs/healthmonger.log 2>> logs/errors.log &; behave integration/features/healthmonger.feature
