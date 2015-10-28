@@ -5,6 +5,7 @@ A json query API on top of heath expendenture data. This service provides a way
 to query research statistics from the following CMS sources:
 https://www.cms.gov/Research-Statistics-Data-and-Systems/Statistics-Trends-and-Reports/NationalHealthExpendData/index.html
 
+[![Build Status](http://img.shields.io/travis/twonds/healthmonger.svg?style=flat)](https://travis-ci.org/twonds/healthmonger)
 
 How do I run this?
 ------------------
