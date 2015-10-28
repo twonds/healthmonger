@@ -120,6 +120,8 @@ curl "http://localhost:5000/query?q=%28gender%3Amales%29&table=age_and_gender&fi
     }
   ],
   "version": "1.0"
+}
+
 ```
 
 The integration tests use the API and has good examples. They are located in the `healthmonger/integration` directory.
