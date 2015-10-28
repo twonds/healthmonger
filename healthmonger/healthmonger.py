@@ -85,7 +85,6 @@ def query():
         total, result = db_client.search(table, q,
                                          limit, offset,
                                          **filter_params)
-        log.debug(result)
         data['result_count'] = total
         data['results'] = result
     except db.InvalidTable:
